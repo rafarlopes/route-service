@@ -52,6 +52,8 @@ func (r ByDurationAndDistance) Swap(i, j int) {
 
 // RoutesHandler handles the API requests for the /routes
 func RoutesHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("received route request with %s", r.URL.RawQuery)
+
 	source, ok := r.URL.Query()["src"]
 	if !ok || len(source) != 1 {
 		handleError(w, http.StatusBadRequest, "MissingSourceParameter", "one src parameter must be specified")
@@ -107,7 +109,6 @@ func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 			handleError(w, http.StatusBadRequest, "InvalidParameters", err.Error())
 			return
 		}
-		log.Println(err)
 		handleError(w, http.StatusInternalServerError, "InternalServerError", "unable to retrieve route for the given coordinates")
 		return
 
@@ -120,6 +121,8 @@ func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		handleError(w, http.StatusInternalServerError, "InternalServerError", "unable to retrieve route for the given coordinates")
 	}
+
+	log.Printf("finished handling of route request with %s", r.URL.RawQuery)
 }
 
 // Parses the coordinates string spliting by comman and validates if the lat and long are valid
@@ -148,4 +151,5 @@ func handleError(w http.ResponseWriter, httpStatusCode int, code string, message
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(httpStatusCode)
 	_ = json.NewEncoder(w).Encode(&ErrorResponse{Code: code, Message: message})
+	log.Printf("error while handling of route request - %s", message)
 }
