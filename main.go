@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -13,6 +15,8 @@ import (
 )
 
 func main() {
+	portFlag := flag.Int("p", 8080, "port number used into the http server")
+	flag.Parse()
 	ctx, cancel := context.WithCancel(context.Background())
 
 	mux := http.NewServeMux()
@@ -20,7 +24,7 @@ func main() {
 	mux.HandleFunc("/routes", route.RoutesHandler)
 
 	httpServer := &http.Server{
-		Addr:        ":8080",
+		Addr:        fmt.Sprintf(":%d", *portFlag),
 		Handler:     mux,
 		BaseContext: func(_ net.Listener) context.Context { return ctx },
 	}
@@ -28,7 +32,7 @@ func main() {
 	httpServer.RegisterOnShutdown(cancel)
 
 	go func() {
-		log.Println("starting server on :8080")
+		log.Printf("starting server on :%d\n", *portFlag)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("ListenAndServe: %v\n", err)
 		}
