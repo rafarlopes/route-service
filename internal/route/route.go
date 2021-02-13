@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -23,7 +24,22 @@ type (
 		Longitude float64
 		Latitude  float64
 	}
+
+	// ByDurationAndDistance is used to sort osrm.Route first by duration and then by distance
+	ByDurationAndDistance []*osrm.Route
 )
+
+func (r ByDurationAndDistance) Len() int {
+	return len(r)
+}
+
+func (r ByDurationAndDistance) Less(i, j int) bool {
+	return r[i].Duration < r[j].Duration && r[i].Distance < r[j].Distance
+}
+
+func (r ByDurationAndDistance) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
+}
 
 // RoutesHandler handles the API requests for the /routes
 func RoutesHandler(w http.ResponseWriter, r *http.Request) {
@@ -75,6 +91,8 @@ func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		response.Routes = append(response.Routes, route)
 	}
+
+	sort.Sort(ByDurationAndDistance(response.Routes))
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
