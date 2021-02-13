@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
 	"strconv"
@@ -19,15 +20,26 @@ type (
 		Routes []*osrm.Route `json:"routes"`
 	}
 
+	// ByDurationAndDistance is used to sort osrm.Route first by duration and then by distance
+	ByDurationAndDistance []*osrm.Route
+
+	// ErrorResponse is wrapper to send json formated errors to the API consumers
+	ErrorResponse struct {
+		// Err  error
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	}
+
 	// coordinates is a internal struct used to store the parsed destinations
 	coordinates struct {
 		Longitude float64
 		Latitude  float64
 	}
-
-	// ByDurationAndDistance is used to sort osrm.Route first by duration and then by distance
-	ByDurationAndDistance []*osrm.Route
 )
+
+// func (e *ErrorResponse) Error() string {
+// 	return fmt.Sprintf("%s: %s", e.Code, e.Err.Error())
+// }
 
 func (r ByDurationAndDistance) Len() int {
 	return len(r)
@@ -45,19 +57,19 @@ func (r ByDurationAndDistance) Swap(i, j int) {
 func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 	source, ok := r.URL.Query()["src"]
 	if !ok || len(source) != 1 {
-		handleError(w, http.StatusBadRequest, "one src parameter must be specified")
+		handleError(w, http.StatusBadRequest, "MissingSourceParameter", "one src parameter must be specified")
 		return
 	}
 
 	srcLong, srcLat, err := parseAndValidateLongitudeAndLatitude(source[0])
 	if err != nil {
-		handleError(w, http.StatusBadRequest, fmt.Sprintf("invalid src parameter: %q - %q", source[0], err.Error()))
+		handleError(w, http.StatusBadRequest, "InvalidSourceParameter", fmt.Sprintf("invalid src parameter: %q - %q", source[0], err.Error()))
 		return
 	}
 
 	destinations, ok := r.URL.Query()["dst"]
 	if !ok {
-		handleError(w, http.StatusBadRequest, "at least one dst parameter must be specified")
+		handleError(w, http.StatusBadRequest, "MissingDestinationParameter", "at least one dst parameter must be specified")
 		return
 	}
 
@@ -65,7 +77,7 @@ func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 	for idx, dst := range destinations {
 		dstLong, dstLat, err := parseAndValidateLongitudeAndLatitude(dst)
 		if err != nil {
-			handleError(w, http.StatusBadRequest, fmt.Sprintf("invalid dst parameter: %q - %q", dst, err.Error()))
+			handleError(w, http.StatusBadRequest, "InvalidDestinationParameter", fmt.Sprintf("invalid dst parameter: %q - %q", dst, err.Error()))
 			return
 		}
 
@@ -83,10 +95,11 @@ func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 		route, err := osrm.GetRoute(r.Context(), srcLong, srcLat, dst.Longitude, dst.Latitude)
 		if err != nil {
 			if errors.Is(err, osrm.ErrInvalidInput) {
-				handleError(w, http.StatusBadRequest, err.Error())
+				handleError(w, http.StatusBadRequest, "InvalidParameters", err.Error())
 				return
 			}
-			handleError(w, http.StatusInternalServerError, "unable to retrieve route for the given coordinates")
+			log.Println(err)
+			handleError(w, http.StatusInternalServerError, "InternalServerError", "unable to retrieve route for the given coordinates")
 			return
 		}
 		response.Routes = append(response.Routes, route)
@@ -121,8 +134,8 @@ func parseAndValidateLongitudeAndLatitude(input string) (float64, float64, error
 }
 
 // prepare the error response on the json format
-func handleError(w http.ResponseWriter, code int, message string) {
+func handleError(w http.ResponseWriter, httpStatusCode int, code string, message string) {
 	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(code)
-	_ = json.NewEncoder(w).Encode(message)
+	w.WriteHeader(httpStatusCode)
+	_ = json.NewEncoder(w).Encode(&ErrorResponse{Code: code, Message: message})
 }

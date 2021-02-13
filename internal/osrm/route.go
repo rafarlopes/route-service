@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -32,6 +33,8 @@ type (
 
 // GetRoute requests the route to the OSRM API and return it using Route struct
 func GetRoute(ctx context.Context, srcLong, srcLat, dstLong, dstLat float64) (*Route, error) {
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("http://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f", srcLong, srcLat, dstLong, dstLat), nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create OSRM API route request")
