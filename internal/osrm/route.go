@@ -12,7 +12,8 @@ import (
 
 var (
 	// ErrInvalidInput is used for the cases where the resquest was done successfully but the parameters are not good.
-	ErrInvalidInput error = errors.New("the input provided to the OSRM API is invalid - check longitude and latitude values")
+	ErrInvalidInput      error = errors.New("the input provided to the OSRM API is invalid - check longitude and latitude values")
+	errOSRMRequestFailed error = errors.New("the request to OSRM API did not succeed")
 )
 
 type (
@@ -66,7 +67,7 @@ func GetRoute(ctx context.Context, srcLong, srcLat, dstLong, dstLat float64) (*R
 	case "InvalidValue":
 		return nil, ErrInvalidInput
 	default:
-		return nil, errors.New(fmt.Sprintf("the request to OSRM API did not succeed - code %q message %q", decodedResp.Code, decodedResp.Message))
+		return nil, errors.Wrapf(errOSRMRequestFailed, "code %q message %q", decodedResp.Code, decodedResp.Message)
 	}
 
 }
