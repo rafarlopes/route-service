@@ -44,7 +44,12 @@ bin:
 test:
 	@go test ./... -race -coverprofile=coverage.txt -covermode=atomic
 
+.PHONY: release
+release:
+	@git tag $(TAG_NAME)
+	@git push --tags origin main
+
 .PHONY: all
 all:
-	@make -s bin test verify sec
+	@make -s test verify sec bin
 
