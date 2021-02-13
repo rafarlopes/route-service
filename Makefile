@@ -6,7 +6,7 @@
 setup:
 	@go get golang.org/x/lint/golint
 	@go get golang.org/x/tools/cmd/goimports
-	@go get github.com/securego/gosec/v2
+	@go get github.com/securego/gosec/cmd/gosec/...
 
 GOFILES=$(shell find . -type f -name '*.go' -not -path "./.git/*")
 
