@@ -25,12 +25,12 @@ In case you prefer to use docker, there's a Dockerfile which is a multistage doc
 An already built image is available on DockerHub if you would like to download:
 
 ````bash
-$ docker pull hub.docker.com/rafarlopes/route-service
+$ docker pull rafarlopes/route-service:latest
 ````
 
 To run the image on your local environment:
 ````bash
-$ docker run --rm -d -p 8080:8080 hub.docker.com/rafarlopes/route-service
+$ docker run --rm -d -p 8080:8080 rafarlopes/route-service:latest
 ````
 
 To build the image on your computer, please use (in project root directory):
