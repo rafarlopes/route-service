@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/rafarlopes/route-service/internal/osrm"
+	"golang.org/x/sync/errgroup"
 )
 
 type (
@@ -36,10 +37,6 @@ type (
 		Latitude  float64
 	}
 )
-
-// func (e *ErrorResponse) Error() string {
-// 	return fmt.Sprintf("%s: %s", e.Code, e.Err.Error())
-// }
 
 func (r ByDurationAndDistance) Len() int {
 	return len(r)
@@ -89,20 +86,31 @@ func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 
 	response := &Response{
 		Source: source[0],
+		Routes: make([]*osrm.Route, len(parsedDestinations)),
 	}
 
-	for _, dst := range parsedDestinations {
-		route, err := osrm.GetRoute(r.Context(), srcLong, srcLat, dst.Longitude, dst.Latitude)
-		if err != nil {
-			if errors.Is(err, osrm.ErrInvalidInput) {
-				handleError(w, http.StatusBadRequest, "InvalidParameters", err.Error())
-				return
+	g, ctx := errgroup.WithContext(r.Context())
+
+	for idx, dst := range parsedDestinations {
+		idx, dst := idx, dst // create a new variables so closure uses the proper reference
+		g.Go(func() error {
+			route, err := osrm.GetRoute(ctx, srcLong, srcLat, dst.Longitude, dst.Latitude)
+			if err == nil {
+				response.Routes[idx] = route
 			}
-			log.Println(err)
-			handleError(w, http.StatusInternalServerError, "InternalServerError", "unable to retrieve route for the given coordinates")
+			return err
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		if errors.Is(err, osrm.ErrInvalidInput) {
+			handleError(w, http.StatusBadRequest, "InvalidParameters", err.Error())
 			return
 		}
-		response.Routes = append(response.Routes, route)
+		log.Println(err)
+		handleError(w, http.StatusInternalServerError, "InternalServerError", "unable to retrieve route for the given coordinates")
+		return
+
 	}
 
 	sort.Sort(ByDurationAndDistance(response.Routes))
@@ -112,7 +120,6 @@ func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		handleError(w, http.StatusInternalServerError, "InternalServerError", "unable to retrieve route for the given coordinates")
 	}
-
 }
 
 // Parses the coordinates string spliting by comman and validates if the lat and long are valid
