@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/rafarlopes/route-service/internal/route"
@@ -42,6 +43,7 @@ func main() {
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh,
 		os.Interrupt,
+		syscall.SIGTERM,
 	)
 
 	// waiting for the os interrupt
