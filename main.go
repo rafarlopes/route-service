@@ -34,7 +34,7 @@ func main() {
 	go func() {
 		log.Printf("starting server on :%d\n", *portFlag)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("ListenAndServe: %v\n", err)
+			log.Fatalf("error on listen and serve: %v\n", err)
 		}
 	}()
 
@@ -58,6 +58,6 @@ func main() {
 		return
 	}
 
-	log.Printf("gracefully stopped\n")
+	log.Printf("service stopped\n")
 	defer os.Exit(0)
 }

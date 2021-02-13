@@ -109,7 +109,10 @@ func RoutesHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		handleError(w, http.StatusInternalServerError, "InternalServerError", "unable to retrieve route for the given coordinates")
+	}
+
 }
 
 // Parses the coordinates string spliting by comman and validates if the lat and long are valid
