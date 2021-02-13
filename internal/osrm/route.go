@@ -33,7 +33,7 @@ type (
 )
 
 // GetRoute requests the route to the OSRM API and return it using Route struct
-func GetRoute(ctx context.Context, srcLong, srcLat, dstLong, dstLat float64) (*Route, error) {
+func GetRoute(ctx context.Context, srcLong float64, srcLat float64, dstLong float64, dstLat float64) (*Route, error) {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("http://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f", srcLong, srcLat, dstLong, dstLat), nil)
