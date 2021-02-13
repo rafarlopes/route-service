@@ -1,17 +1,16 @@
 FROM golang:1.15 as build
 
-WORKDIR /go/src/github.com/rafarlopes/route-service
+WORKDIR /app
 COPY . .
 
-RUN go get -d -v ./...
-RUN go install -v ./...
-RUN make setup
-RUN make
+RUN make setup verify sec
 
-FROM debian
+ENV CGO_ENABLED 0
+RUN make bin
 
-COPY --from=build /go/src/github.com/rafarlopes/route-service/dist /app
+FROM scratch
+
+COPY --from=build /app/dist /
 EXPOSE 8080
 
-ENTRYPOINT [ "/app/route-service" ]
-
+ENTRYPOINT [ "/route-service" ]
