@@ -54,7 +54,7 @@ $ make release TAG_NAME=v0.1
 ## GitHub Actions
 We have an action that will be build and test every single commit and pull request done against our Repository.
 Also it's include another action to create a draft release and attach the binary every time a tag is pushed into our Repository.
-After creating the release, another action kicks in and pushes the image to the DockerHub
+After creating the release, another action kicks in and pushes the image to the DockerHub. This action also deploys the code to gCloud App Engine
 
 ## Design decisions
 

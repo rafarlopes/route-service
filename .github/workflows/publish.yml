@@ -1,4 +1,4 @@
-name: Publish docker image
+name: Publish docker image and publish to gCloud
 
 on:
   release:
@@ -44,3 +44,20 @@ jobs:
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+
+  deploy_to_app_engine:
+    name: Deploy code to gCloud App Engine
+    runs-on: ubuntu-latest
+    steps:
+      -
+        id: deploy
+        uses: google-github-actions/deploy-appengine@main
+        with:
+          credentials: ${{ secrets.GCP_CREDENTIALS }}
+          project_id: ${{ secrets.PROJECT_ID }}
+          deliverables: app.yaml
+
+      # Example of using the output
+      -
+        id: test
+        run: curl "${{ steps.deploy.outputs.url }}"
