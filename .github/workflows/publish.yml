@@ -50,6 +50,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
         id: deploy
         uses: google-github-actions/deploy-appengine@main
         with:
