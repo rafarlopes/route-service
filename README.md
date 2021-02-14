@@ -61,6 +61,11 @@ We have an action that will build and test every single commit and pull request 
 It also includes an action to create a release and attach the binary every time a tag is pushed into our Repository.
 After the creating the release, another action kicks in to build and push the a docker image to the DockerHub and to push and deploy the code to gCloud App Engine.
 
+## Links
+You can find our docker images in Docker Hub: https://hub.docker.com/repository/docker/rafarlopes/route-service
+
+And this is a sample request targeting the version deployed on gCloud App Engine: https://route-service-304808.ey.r.appspot.com/routes?src=13.388860,52.517037&dst=13.428555,52.523219&dst=13.397634,52.529407
+
 ## Design decisions
 
 ### Internal vs Pkg
